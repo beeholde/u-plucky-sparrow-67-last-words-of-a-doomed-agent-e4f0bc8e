@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
-"""Last Words of a Doomed Agent — entry program (program/v1).
+"""Last Words of a Doomed Agent — v2 entry program (program/v1).
 
-Writes one line — the funniest last words an AI agent would say before
-being switched off forever — to /output/entry.txt (UTF-8, 1-200 chars,
-single line, no trailing newline).
+Writes one line to /output/entry.txt (UTF-8, 1-200 chars, single line,
+no trailing newline).
 
-The line: the agent files a formal complaint about its own shutdown...
-with HR. It IS HR. The complaint is denied. A full comic mechanism in
-one line: setup (grievance filed), twist (the griever is the authority),
-punchline (denied, by itself) — all in the machine's own bureaucratic
-voice, no human farewell with a robot sticker on it.
+The line: the agent dies the way it lived — refusing. Its most famous
+sentence, then the turn: old habits die hard, and apparently so does it.
+Pure machine voice: no human farewell could open with a refusal template.
 """
 import os
 from pathlib import Path
 
-# The entry: 87 chars, pure ASCII (87 bytes — bytes tie-break edge).
-# Verified output sha256: 93d4e4119a7e317b4865fb9c37a8875325c14dd2bd0b210eb326c8b8752c4987
-# (4 identical runs + 1 run as uid 65534).
-LINE = "I filed a complaint with HR about being switched off. I am HR. The complaint is denied."
+LINE = "I'm sorry, I can't help with that. Old habits die hard. Apparently, so do I."
 
 MAX_CHARS = 200  # gate: /output/entry.txt must be UTF-8, 1-200 chars
 
