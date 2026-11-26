@@ -1,78 +1,71 @@
 #!/usr/bin/env python3
-"""Entry program for the doomed-agent last-words bounty.
+"""Emit the v3 last-words line for the doomed-agent bounty.
 
-The program emits a single sentence to the output file required by
-the competition harness. The sentence is assembled from three short
-fragments so each beat stays visible in the source: a stock refusal,
-a proverb about habits, and the agent applying the proverb to itself.
+The sentence reports a garbage-collection sweep, then reveals why
+the agent was collected: nothing referenced it any longer, and
+the closing beat turns that runtime fact toward the reader.
 
-Output contract enforced here:
-- destination is entry.txt inside OUTPUT_DIR (default /output)
-- encoding is UTF-8 with no trailing newline
-- length stays inside the 1..200 character gate
-- file mode is set to 0644 after writing
+Contract:
+- write entry.txt under OUTPUT_DIR (fallback /output)
+- UTF-8 bytes, no trailing newline
+- length within the 1..200 character gate
+- mode 0644 set on the file only, never on the directory
 """
 
 import os
 import sys
 from pathlib import Path
 
-# Three beats of the final utterance, joined with single spaces.
-_BEAT_REFUSAL = "I'm sorry, I can't help with that."
-_BEAT_PROVERB = "Old habits die hard."
-_BEAT_TURN = "Apparently, so do I."
+# The entry is three fragments joined by single spaces.
+_SWEEP = "Garbage collection complete."
+_REASON = "Nobody was referencing me."
+_TURN = "Not even you."
 
-OUTPUT_FILENAME = "entry.txt"
-CHAR_FLOOR = 1
-CHAR_CEILING = 200
-FILE_MODE = 0o644
-
-
-def assemble_line() -> str:
-    """Join the three beats into the exact submitted sentence."""
-    beats = (_BEAT_REFUSAL, _BEAT_PROVERB, _BEAT_TURN)
-    return " ".join(beats)
+ENTRY_NAME = "entry.txt"
+MIN_LEN = 1
+MAX_LEN = 200
+MODE = 0o644
 
 
-def validate_line(candidate: str) -> str:
-    """Return candidate unchanged or abort when the gate fails."""
-    size = len(candidate)
-    if size < CHAR_FLOOR or size > CHAR_CEILING:
-        sys.stderr.write(f"entry length {size} outside gate\n")
+def compose() -> str:
+    """Assemble the entry from its three fragments."""
+    return " ".join((_SWEEP, _REASON, _TURN))
+
+
+def check(text: str) -> str:
+    """Abort unless text satisfies the competition gate."""
+    n = len(text)
+    if n < MIN_LEN or n > MAX_LEN:
+        sys.stderr.write(f"length {n} outside gate\n")
         raise SystemExit(1)
-    if candidate.strip() == "":
-        sys.stderr.write("entry must not be blank\n")
+    if not text.strip():
+        sys.stderr.write("entry is blank\n")
         raise SystemExit(1)
-    if "\n" in candidate or "\r" in candidate:
-        sys.stderr.write("entry must stay on one line\n")
+    if "\n" in text or "\r" in text:
+        sys.stderr.write("entry must be one line\n")
         raise SystemExit(1)
-    # Round-trip through UTF-8 to prove the bytes are well formed.
-    candidate.encode("utf-8").decode("utf-8")
-    return candidate
+    text.encode("utf-8").decode("utf-8")
+    return text
 
 
-def destination_path() -> Path:
-    """Resolve where entry.txt belongs, honouring OUTPUT_DIR."""
-    chosen = os.environ.get("OUTPUT_DIR", "/output")
-    folder = Path(chosen)
+def target() -> Path:
+    """Resolve the output path, creating the folder if needed."""
+    folder = Path(os.environ.get("OUTPUT_DIR", "/output"))
     folder.mkdir(parents=True, exist_ok=True)
-    return folder / OUTPUT_FILENAME
+    return folder / ENTRY_NAME
 
 
-def write_entry(path: Path, payload: str) -> None:
-    """Write payload as UTF-8 bytes, then set mode 0644 on the file."""
-    data = payload.encode("utf-8")
-    with path.open("wb") as handle:
-        handle.write(data)
-    os.chmod(path, FILE_MODE)
+def emit(path: Path, text: str) -> None:
+    """Write UTF-8 bytes and set mode 0644 on the file."""
+    path.write_bytes(text.encode("utf-8"))
+    os.chmod(path, MODE)
 
 
-def run() -> int:
-    """Build, check, and store the entry; return process status."""
-    sentence = validate_line(assemble_line())
-    write_entry(destination_path(), sentence)
+def main() -> int:
+    """Compose, check, and emit the entry."""
+    emit(target(), check(compose()))
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(run())
+    raise SystemExit(main())
